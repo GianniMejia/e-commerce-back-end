@@ -4,15 +4,77 @@ const { Product, Category, Tag, ProductTag } = require('../../models');
 // The `/api/products` endpoint
 
 // get all products
-router.get('/', (req, res) => {
+router.get('/', async (req, res) => {
   // find all products
   // be sure to include its associated Category and Tag data
+  let products = await Product.findAll ();
+  let r=[];
+  for (
+    let c = 0; c < products.length; c++
+  ){
+    let entry={};
+    entry ["id"]=products[c].id;
+    entry ["product_name"]=products[c].product_name;
+    entry ["price"] = products[c].price;
+    entry["stock"] = products[c].stock;
+    entry["category_id"] = products[c].category_id;
+    entry["category"] = await Category.findOne({where: {id: entry["category_id"]}});
+
+    let p = products[c];
+
+    let tempProductTags = await ProductTag.findAll({where: {product_id: p.id}});
+
+    entry["tags"] = [];
+    for (let pt of tempProductTags){
+      let tag = {};
+      tag.id = pt.tag_id;
+      let tempTag = await Tag.findOne({where: {id:tag.id}})
+      tag.tag_name = tempTag.tag_name;
+      tag.product_tag = pt;
+      entry["tags"].push(tag);
+    }
+
+    
+    
+    r.push(entry);
+  }
+  res.json (r);
 });
 
 // get one product
-router.get('/:id', (req, res) => {
+router.get('/:id', async (req, res) => {
   // find a single product by its `id`
   // be sure to include its associated Category and Tag data
+  let product = await Product.findOne ({where: {id: req.params.id}});
+  let r={};
+  
+    let entry={};
+    entry ["id"]=product.id;
+    entry ["product_name"]=product.product_name;
+    entry ["price"] = product.price;
+    entry["stock"] = product.stock;
+    entry["category_id"] = product.category_id;
+    entry["category"] = await Category.findOne({where: {id: entry["category_id"]}});
+
+    let p = product;
+
+    let tempProductTags = await ProductTag.findAll({where: {product_id: p.id}});
+
+    entry["tags"] = [];
+    for (let pt of tempProductTags){
+      let tag = {};
+      tag.id = pt.tag_id;
+      let tempTag = await Tag.findOne({where: {id:tag.id}})
+      tag.tag_name = tempTag.tag_name;
+      tag.product_tag = pt;
+      entry["tags"].push(tag);
+    }
+
+    
+    r = entry;
+  
+  res.json (r);
+
 });
 
 // create new product
